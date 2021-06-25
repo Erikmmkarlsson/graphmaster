@@ -22,10 +22,5 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-#node
-package-lock.json
-package.json
-
-#flask
 venv
 __pycache__
