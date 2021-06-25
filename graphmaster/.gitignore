@@ -25,3 +25,7 @@ yarn-error.log*
 #node
 package-lock.json
 package.json
+
+#flask
+venv
+__pycache__
