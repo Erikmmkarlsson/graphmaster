@@ -5,7 +5,7 @@ import {
   Route,
   Link
 } from "react-router-dom";
-
+import {login, useAuth, logout} from "./auth"
 export default function App() {
   return (
     <Router>
@@ -52,6 +52,7 @@ function Home() {
 function Login() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
+  const [logged] = useAuth();
 
   const onSubmitClick = (e)=>{
     e.preventDefault()
@@ -67,6 +68,7 @@ function Login() {
     }).then(r => r.json())
       .then(token => {
         if (token.access_token){
+          login(token)
           console.log(token)          
         }
         else {
@@ -86,7 +88,7 @@ function Login() {
   return (
     <div>
       <h2>Login</h2>
-      <form action="#">
+      {!logged? <form action="#">
         <div>
           <input type="text" 
             placeholder="Username" 
@@ -106,6 +108,7 @@ function Login() {
           Login Now
         </button>
       </form>
+      : <button onClick={() => logout()}>Logout</button>}
     </div>
   )
 }
