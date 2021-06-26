@@ -1,26 +1,115 @@
-import React, { useState, useEffect } from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
 
-function App() {
-  const [currentTime, setCurrentTime] = useState(0);
-
-  useEffect(() => {
-    fetch('/time').then(res => res.json()).then(data => {
-      setCurrentTime(data.time);
-    });
-  }, []);
-
+export default function App() {
   return (
-    <div className="App">
-      <header className="App-header">
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/login">Login</Link>
+            </li>
+            <li>
+              <Link to="/secret">Secret</Link>
+            </li>
+          </ul>
+        </nav>
 
-        ... no changes in this part ...
-
-        <p>The current time is {currentTime}.</p>
-      </header>
-    </div>
+        {/* A <Switch> looks through its children <Route>s and
+            renders the first one that matches the current URL. */}
+        <Switch>
+          <Route path="/login">
+            <Login />
+          </Route>
+          <Route path="/secret">
+            <Secret />
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
-export default App;
+function Home() {
+  useEffect(() => {
+    fetch("/api").then(resp => resp.json()).then(resp => console.log(resp))
+  }, [])
+  return <h2>Home</h2>;
+}
+
+function Login() {
+  const [username, setUsername] = useState('')
+  const [password, setPassword] = useState('')
+
+  const onSubmitClick = (e)=>{
+    e.preventDefault()
+    console.log("You pressed login")
+    let opts = {
+      'username': username,
+      'password': password
+    }
+    console.log(opts)
+    fetch('/api/login', {
+      method: 'post',
+      body: JSON.stringify(opts)
+    }).then(r => r.json())
+      .then(token => {
+        if (token.access_token){
+          console.log(token)          
+        }
+        else {
+          console.log("Please type in correct username/password")
+        }
+      })
+  }
+
+  const handleUsernameChange = (e) => {
+    setUsername(e.target.value)
+  }
+
+  const handlePasswordChange = (e) => {
+    setPassword(e.target.value)
+  }
+
+  return (
+    <div>
+      <h2>Login</h2>
+      <form action="#">
+        <div>
+          <input type="text" 
+            placeholder="Username" 
+            onChange={handleUsernameChange}
+            value={username} 
+          />
+        </div>
+        <div>
+          <input
+            type="password"
+            placeholder="Password"
+            onChange={handlePasswordChange}
+            value={password}
+          />
+        </div>
+        <button onClick={onSubmitClick} type="submit">
+          Login Now
+        </button>
+      </form>
+    </div>
+  )
+}
+
+function Secret() {
+  return <h2>Secret</h2>;
+}

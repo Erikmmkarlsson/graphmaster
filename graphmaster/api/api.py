@@ -1,4 +1,3 @@
-import time
 import os
 import flask
 import flask_sqlalchemy
@@ -74,6 +73,7 @@ with app.app_context():
 @app.route('/api/')
 def home():
     return {"Hello": "World"}, 200
+
   
 @app.route('/api/login', methods=['POST'])
 def login():
