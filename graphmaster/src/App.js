@@ -3,9 +3,10 @@ import {
   BrowserRouter as Router,
   Switch,
   Route,
+  Redirect,
   Link
 } from "react-router-dom";
-import {login, useAuth, logout} from "./auth"
+import {login, useAuth, authFetch, logout} from "./auth"
 export default function App() {
   return (
     <Router>
@@ -30,9 +31,7 @@ export default function App() {
           <Route path="/login">
             <Login />
           </Route>
-          <Route path="/secret">
-            <Secret />
-          </Route>
+          <PrivateRoute path="/secret" component={Secret} />
           <Route path="/">
             <Home />
           </Route>
@@ -114,5 +113,33 @@ function Login() {
 }
 
 function Secret() {
-  return <h2>Secret</h2>;
+  const [message, setMessage] = useState('')
+
+  useEffect(() => {
+    authFetch("/api/protected").then(response => {
+      if (response.status === 401){
+        setMessage("Sorry you aren't authorized!")
+        return null
+      }
+      return response.json()
+    }).then(response => {
+      if (response && response.message){
+        setMessage(response.message)
+      }
+    })
+  }, [])
+  return (
+    <h2>Secret: {message}</h2>
+  )
+}
+
+
+const PrivateRoute = ({ component: Component, ...rest }) => {
+  const [logged] = useAuth();
+
+  return <Route {...rest} render={(props) => (
+    logged
+      ? <Component {...props} />
+      : <Redirect to='/login' />
+  )} />
 }
