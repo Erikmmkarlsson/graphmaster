@@ -6,7 +6,9 @@ import {
   Redirect,
   Link
 } from "react-router-dom";
-import {login, useAuth, authFetch, logout} from "./auth"
+import { useAuth, authFetch} from "./auth"
+import Login from "./components/login/Login"
+
 export default function App() {
   return (
     <Router>
@@ -29,7 +31,7 @@ export default function App() {
             renders the first one that matches the current URL. */}
         <Switch>
           <Route path="/login">
-            <Login />
+            <Login/>
           </Route>
           <PrivateRoute path="/secret" component={Secret} />
           <Route path="/">
@@ -48,69 +50,6 @@ function Home() {
   return <h2>Home</h2>;
 }
 
-function Login() {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [logged] = useAuth();
-
-  const onSubmitClick = (e)=>{
-    e.preventDefault()
-    console.log("You pressed login")
-    let opts = {
-      'username': username,
-      'password': password
-    }
-    console.log(opts)
-    fetch('/api/login', {
-      method: 'post',
-      body: JSON.stringify(opts)
-    }).then(r => r.json())
-      .then(token => {
-        if (token.access_token){
-          login(token)
-          console.log(token)          
-        }
-        else {
-          console.log("Please type in correct username/password")
-        }
-      })
-  }
-
-  const handleUsernameChange = (e) => {
-    setUsername(e.target.value)
-  }
-
-  const handlePasswordChange = (e) => {
-    setPassword(e.target.value)
-  }
-
-  return (
-    <div>
-      <h2>Login</h2>
-      {!logged? <form action="#">
-        <div>
-          <input type="text" 
-            placeholder="Username" 
-            onChange={handleUsernameChange}
-            value={username} 
-          />
-        </div>
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            onChange={handlePasswordChange}
-            value={password}
-          />
-        </div>
-        <button onClick={onSubmitClick} type="submit">
-          Login Now
-        </button>
-      </form>
-      : <button onClick={() => logout()}>Logout</button>}
-    </div>
-  )
-}
 
 function Secret() {
   const [message, setMessage] = useState('')
