@@ -6,7 +6,7 @@ networks:
 
 services:
     influxdb:
-        image: influxdb:1.8
+        image: influxdb:latest
         container_name: influxdb
         ports:
             - 8086:8086
@@ -18,11 +18,12 @@ services:
         networks: 
             - tig-net
         volumes:
-            - "./influxdb/data:/var/lib/influxdb"
+            - ./data:/var/lib/influxdb
 
     grafana:
         image: grafana/grafana:7.1.3
         container_name: grafana
+        user: root
         ports: 
             - 3000:3000
         environment:
@@ -31,6 +32,8 @@ services:
         networks: 
             - tig-net
         restart: always        
+        volumes:
+            - ./data/grafana:/var/lib/grafana
 
     telegraf:
         image: telegraf:latest
@@ -44,8 +47,6 @@ services:
             DATABASE: "iot"
         depends_on: 
           - "influxdb"
-        volumes:
-          - "./telegraf/telegraf.conf:/etc/telegraf/telegraf.conf"
         networks: 
           - tig-net
         privileged: true
