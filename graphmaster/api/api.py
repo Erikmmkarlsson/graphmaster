@@ -1,8 +1,10 @@
 import os
+import sys
 import flask
 import flask_sqlalchemy
 import flask_praetorian
 import flask_cors
+from flask_mail import Mail, Message
 
 db = flask_sqlalchemy.SQLAlchemy()
 guard = flask_praetorian.Praetorian()
@@ -42,28 +44,44 @@ class User(db.Model):
 
 # Initialize flask app for the example
 app = flask.Flask(__name__)
+
 app.debug = True
 app.config['SECRET_KEY'] = 'top secret'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# mail config
+app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USERNAME'] = os.environ['GMAIL_USERNAME']
+app.config['MAIL_PASSWORD'] = os.environ['GMAIL_PASSWORD']
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+mail= Mail(app)
+
+try:  
+   os.environ["GMAIL_PASSWORD"]
+except KeyError: 
+   print("Please set the environment variable GMAIL_PASSWORD")
+   sys.exit(1)
+
 # Initialize the flask-praetorian instance for the app
 guard.init_app(app, User)
 
-# Initialize a local database for the example
+# Initialize local database
 app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.getcwd(), 'database.db')}"
 db.init_app(app)
 
-# Initializes CORS so that the api_tool can talk to the example app
+# Initializes CORS so that the api_tool can talk to the app
 cors.init_app(app)
 
-# Add users for the example
+# Add default users
 with app.app_context():
     db.create_all()
     if db.session.query(User).filter_by(username='Erik').count() < 1:
         db.session.add(User(
-            username='Erik',
+            username='admin',
             # Important to hash the created password
             password=guard.hash_password('strongpassword'),
             roles='admin'
@@ -71,10 +89,20 @@ with app.app_context():
     db.session.commit()
 
 
-# Set up some routes for the example
+# Set up routes
 @app.route('/api/')
 def home():
     return {"Hello": "World"}, 200
+
+
+@app.route("/api/mail")
+def index():
+    msg = Message("Hello",
+                sender="from@example.com",
+                recipients=["erik.karlsson97@outlook.com"])
+    msg.body = "Hello Flask message sent from Flask-Mail"
+    mail.send(msg)
+    return "Sent"
 
 
 @app.route('/api/login', methods=['POST'])
@@ -84,7 +112,7 @@ def login():
     issuing a JWT token.
     .. example::
        $ curl http://localhost:5000/api/login -X POST \
-         -d '{"username":"Yasoob","password":"strongpassword"}'
+         -d '{"username":"admin","password":"strongpassword"}'
     """
     req = flask.request.get_json(force=True)
     username = req.get('username', None)
@@ -122,6 +150,23 @@ def protected():
     """
     return {'message': f'protected endpoint (allowed user {flask_praetorian.current_user().username})'}
 
+
+@app.route('/api/disable_user', methods=['POST'])
+@flask_praetorian.auth_required
+@flask_praetorian.roles_required('admin')
+def disable_user():
+    """
+    Disables a user in the data store
+    .. example::
+        $ curl http://localhost:5000/disable_user -X POST \
+          -H "Authorization: Bearer <your_token>" \
+          -d '{"username":"Walter"}'
+    """
+    req = flask.request.get_json(force=True)
+    usr = User.query.filter_by(username=req.get('username', None)).one()
+    usr.is_active = False
+    db.session.commit()
+    return flask.jsonify(message='disabled user {}'.format(usr.username))
 
 # Run the example
 if __name__ == '__main__':
