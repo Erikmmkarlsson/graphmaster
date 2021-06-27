@@ -23,6 +23,10 @@ class User(db.Model):
             return self.roles.split(',')
         except Exception:
             return []
+    
+    @property
+    def identity(self):
+        return self.id
 
     @classmethod
     def lookup(cls, username):
@@ -31,10 +35,6 @@ class User(db.Model):
     @classmethod
     def identify(cls, id):
         return cls.query.get(id)
-
-    @property
-    def identity(self):
-        return self.id
 
     def is_valid(self):
         return self.is_active
@@ -46,6 +46,7 @@ app.debug = True
 app.config['SECRET_KEY'] = 'top secret'
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize the flask-praetorian instance for the app
 guard.init_app(app, User)
@@ -60,12 +61,13 @@ cors.init_app(app)
 # Add users for the example
 with app.app_context():
     db.create_all()
-    if db.session.query(User).filter_by(username='Yasoob').count() < 1:
+    if db.session.query(User).filter_by(username='Erik').count() < 1:
         db.session.add(User(
-          username='Yasoob',
-          password=guard.hash_password('strongpassword'), #Important to hash the created password
-          roles='admin'
-            ))
+            username='Erik',
+            # Important to hash the created password
+            password=guard.hash_password('strongpassword'),
+            roles='admin'
+        ))
     db.session.commit()
 
 
@@ -74,7 +76,7 @@ with app.app_context():
 def home():
     return {"Hello": "World"}, 200
 
-  
+
 @app.route('/api/login', methods=['POST'])
 def login():
     """
@@ -91,7 +93,7 @@ def login():
     ret = {'access_token': guard.encode_jwt_token(user)}
     return ret, 200
 
-  
+
 @app.route('/api/refresh', methods=['POST'])
 def refresh():
     """
@@ -106,8 +108,8 @@ def refresh():
     new_token = guard.refresh_jwt_token(old_token)
     ret = {'access_token': new_token}
     return ret, 200
-  
-  
+
+
 @app.route('/api/protected')
 @flask_praetorian.auth_required
 def protected():
