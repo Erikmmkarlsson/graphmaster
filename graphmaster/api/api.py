@@ -51,17 +51,19 @@ app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# mail config
+# mail config. Set gmail username+password in seperate env-file .env
 app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = os.environ['GMAIL_USERNAME']
 app.config['MAIL_PASSWORD'] = os.environ['GMAIL_PASSWORD']
+app.config['MAIL_DEFAULT_SENDER'] = ('Graphmaster', os.environ['GMAIL_USERNAME'])
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail= Mail(app)
 
 try:  
-   os.environ["GMAIL_PASSWORD"]
+    os.environ["GMAIL_PASSWORD"]
+    os.environ["GMAIL_USERNAME"]
 except KeyError: 
    print("Please set the environment variable GMAIL_PASSWORD")
    sys.exit(1)
@@ -95,10 +97,9 @@ def home():
     return {"Hello": "World"}, 200
 
 
-@app.route("/api/mail")
+@app.route("/api/mailme")
 def index():
     msg = Message("Hello",
-                sender="from@example.com",
                 recipients=["erik.karlsson97@outlook.com"])
     msg.body = "Hello Flask message sent from Flask-Mail"
     mail.send(msg)
