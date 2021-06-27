@@ -104,7 +104,7 @@ def refresh():
          -H "Authorization: Bearer <your_token>"
     """
     print("refresh request")
-    old_token = request.get_data()
+    old_token = guard.read_token_from_header()
     new_token = guard.refresh_jwt_token(old_token)
     ret = {'access_token': new_token}
     return ret, 200

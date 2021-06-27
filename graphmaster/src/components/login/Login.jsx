@@ -4,7 +4,7 @@ import { useState } from "react";
 export default function Login() {
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
-    const [logged] = useAuth();
+    const [loggedIn] = useAuth();
 
     const onSubmitClick = (e) => {
         e.preventDefault()
@@ -40,7 +40,7 @@ export default function Login() {
     return (
         <div className="login" id="login">
             <h2>Login</h2>
-            {!logged ? <form action="#">
+            {!loggedIn ? <form action="#">
                 <div>
                     <input type="text"
                         placeholder="Username"

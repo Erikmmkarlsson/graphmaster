@@ -55,6 +55,7 @@ function Secret() {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
+    //Api checks whether someone is logged in or not
     authFetch("/api/protected").then(response => {
       if (response.status === 401){
         setMessage("Sorry you aren't authorized!")
@@ -72,7 +73,7 @@ function Secret() {
   )
 }
 
-
+//checks whether someone is logged in or not, if not then redirects to login page
 const PrivateRoute = ({ component: Component, ...rest }) => {
   const [logged] = useAuth();
 
