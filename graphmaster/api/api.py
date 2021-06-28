@@ -56,7 +56,7 @@ app.config['MAIL_SERVER']='smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = os.environ['GMAIL_USERNAME']
 app.config['MAIL_PASSWORD'] = os.environ['GMAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = ('Graphmaster', os.environ['GMAIL_USERNAME'])
+app.config['MAIL_DEFAULT_SENDER'] = ('Graphmaster', app.config['MAIL_USERNAME'])
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 mail= Mail(app)
@@ -116,6 +116,7 @@ def login():
          -d '{"username":"admin","password":"strongpassword"}'
     """
     req = flask.request.get_json(force=True)
+    
     username = req.get('username', None)
     password = req.get('password', None)
     user = guard.authenticate(username, password)
@@ -170,7 +171,7 @@ def disable_user():
     return flask.jsonify(message='disabled user {}'.format(usr.username))
 
 
-@app.route('api/register', methods=['POST'])
+@app.route('/api/register', methods=['POST'])
 def register():
     """
     Registers a new user by parsing a POST request containing new user info and
@@ -184,7 +185,7 @@ def register():
            "email":"brandt@biglebowski.com"
          }'
     """
-    req = flask.request.get_json(force=True)
+    req = flask.request.get_json(force=True)[0]
     username = req.get('username', None)
     email = req.get('email', None)
     password = req.get('password', None)
@@ -196,14 +197,14 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
-    guard.send_registration_email(email, user=new_user)
+    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'))
     ret = {'message': 'successfully sent registration email to user {}'.format(
         new_user.username
     )}
     return ret, 201
 
 
-@app.route('api/finalize')
+@app.route('/api/finalize')
 def finalize():
     """
     Finalizes a user registration with the token that they were issued in their
