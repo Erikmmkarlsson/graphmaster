@@ -169,6 +169,63 @@ def disable_user():
     db.session.commit()
     return flask.jsonify(message='disabled user {}'.format(usr.username))
 
-# Run the example
+
+@app.route('api/register', methods=['POST'])
+def register():
+    """
+    Registers a new user by parsing a POST request containing new user info and
+    dispatching an email with a registration token
+
+    .. example::
+       $ curl http://localhost:5000/register -X POST \
+         -d '{
+           "username":"Brandt", \
+           "password":"herlifewasinyourhands" \
+           "email":"brandt@biglebowski.com"
+         }'
+    """
+    req = flask.request.get_json(force=True)
+    username = req.get('username', None)
+    email = req.get('email', None)
+    password = req.get('password', None)
+    new_user = User(
+        username=username,
+        password=guard.hash_password(password),
+        roles='member',
+        is_active=False
+    )
+    db.session.add(new_user)
+    db.session.commit()
+    guard.send_registration_email(email, user=new_user)
+    ret = {'message': 'successfully sent registration email to user {}'.format(
+        new_user.username
+    )}
+    return ret, 201
+
+
+@app.route('api/finalize')
+def finalize():
+    """
+    Finalizes a user registration with the token that they were issued in their
+    registration email
+
+    .. example::
+       $ curl http://localhost:5000/finalize -X GET \
+         -H "Authorization: Bearer <your_token>"
+    """
+    registration_token = guard.read_token_from_header()
+    user = guard.get_user_from_registration_token(registration_token)
+    # perform 'activation' of user here...like setting 'active' or something
+    user.is_active = True
+    db.session.commit()
+
+    ret = {'access_token': guard.encode_jwt_token(user)}
+    return ret, 200
+
+
+
+
+
+# Run the api
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
