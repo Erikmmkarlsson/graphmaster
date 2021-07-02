@@ -65,7 +65,7 @@ try:
     os.environ["GMAIL_PASSWORD"]
     os.environ["GMAIL_USERNAME"]
 except KeyError: 
-   print("Please set the environment variable GMAIL_PASSWORD")
+   print("Please set the environment variable GMAIL_PASSWORD and USERNAME")
    sys.exit(1)
 
 # Initialize the flask-praetorian instance for the app
@@ -83,7 +83,7 @@ with app.app_context():
     db.create_all()
     if db.session.query(User).filter_by(username='Erik').count() < 1:
         db.session.add(User(
-            username='admin',
+            username='Erik',
             # Important to hash the created password
             password=guard.hash_password('strongpassword'),
             roles='admin'
@@ -192,12 +192,11 @@ def register():
     new_user = User(
         username=username,
         password=guard.hash_password(password),
-        roles='member',
         is_active=False
     )
     db.session.add(new_user)
     db.session.commit()
-    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'))
+    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'), confirmation_uri='http://localhost:5000/finalize' )
     ret = {'message': 'successfully sent registration email to user {}'.format(
         new_user.username
     )}

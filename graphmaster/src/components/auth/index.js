@@ -1,6 +1,6 @@
 import {createAuthProvider} from 'react-token-auth';
 /*
-This creates an auth provider which is interfaced by the exported consts
+This creates an auth provider which 
 */
 export const [useAuth, authFetch, login, logout] =
     createAuthProvider({
