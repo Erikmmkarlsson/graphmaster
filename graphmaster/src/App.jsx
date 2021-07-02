@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import './App.scss';
 import {
   BrowserRouter as Router,
   Switch,
@@ -8,24 +9,25 @@ import {
 } from "react-router-dom";
 import { useAuth, authFetch} from "./components/auth";
 import Login from "./components/login/Login";
-import Home from "./components/login/Home";
+import Home from "./components/home/Home";
+import Graphs from "./components/graphs/Graphs"
 
 export default function App() {
   return (
     <Router>
       <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/login">Login</Link>
-            </li>
-            <li>
-              <Link to="/secret">Secret</Link>
-            </li>
-          </ul>
+        <nav className= "nav">
+        <Link to="/"><div className="button">
+            Home</div></Link>
+
+            <Link to="/login"><div className="button"> 
+            Login</div></Link>
+
+            <Link to="/secret"><div className="button"> 
+            Secret</div></Link>
+
+            <Link to="/graphs"><div className="button"> 
+            Graphs</div></Link>
         </nav>
 
         {/* A <Switch> looks through its children <Route>s and
@@ -34,9 +36,16 @@ export default function App() {
           <Route path="/login">
             <Login/>
           </Route>
+
           <PrivateRoute path="/secret" component={Secret} />
+
+          <Route path="/graphs">
+            <h1>Graphs</h1>
+            <Graphs/>
+          </Route>
+
           <Route path="/">
-            <Home />
+            <Home/>
           </Route>
         </Switch>
       </div>
