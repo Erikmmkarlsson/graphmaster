@@ -1,4 +1,4 @@
-import {login, useAuth, logout} from "../../auth"
+import {login, useAuth, logout} from "../auth"
 import { useState } from "react";
 
 export default function Login() {

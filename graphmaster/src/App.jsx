@@ -6,8 +6,9 @@ import {
   Redirect,
   Link
 } from "react-router-dom";
-import { useAuth, authFetch} from "./auth"
-import Login from "./components/login/Login"
+import { useAuth, authFetch} from "./components/auth";
+import Login from "./components/login/Login";
+import Home from "./components/login/Home";
 
 export default function App() {
   return (
@@ -41,13 +42,6 @@ export default function App() {
       </div>
     </Router>
   );
-}
-
-function Home() {
-  useEffect(() => {
-    fetch("/api").then(resp => resp.json()).then(resp => console.log(resp))
-  }, [])
-  return <h2>Home</h2>;
 }
 
 
