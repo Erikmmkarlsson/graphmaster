@@ -1,5 +1,6 @@
 import { Component } from "react";
 import Chart from "react-apexcharts";
+import './Graphs.scss';
 
 export default class Graphs extends Component {
   constructor(props) {
@@ -31,10 +32,17 @@ export default class Graphs extends Component {
             <Chart
               options={this.state.options}
               series={this.state.series}
-              type="bar"
+              type="line"
               width="500"
             />
           </div>
+          <div className="mixed-chart">
+          <Chart
+              options={this.state.options}
+              series={this.state.series}
+              type="bar"
+              width="500"
+            /></div>
         </div>
       </div>
     );

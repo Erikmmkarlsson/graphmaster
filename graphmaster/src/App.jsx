@@ -71,8 +71,10 @@ function Secret() {
       }
     })
   }, [])
-  return (
-    <h2>Secret: {message}</h2>
+  return (<div>
+    <h2>{message}</h2>
+    <p>The secret is that you are here now.</p>
+    </div>
   )
 }
 
