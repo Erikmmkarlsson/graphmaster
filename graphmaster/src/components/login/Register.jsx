@@ -4,20 +4,22 @@ export default function Register() {
 
     const { register, handleSubmit } = useForm();
     const onSubmit = (data) => {
-    console.log(data)
-    const requestOptions = {
-        method: 'POST',
-        body: JSON.stringify(data)
-    };
-    fetch('/api/register', requestOptions)
-        .then(response => response.json())
+        console.log(data)
+        const requestOptions = {
+            method: 'POST',
+            body: JSON.stringify(data)
+        };
 
+        fetch('/api/register', requestOptions);
+
+        window.open("/login");
     }
 
     return (
         <div className="register" id="register">
 
-            <form onSubmit={handleSubmit(onSubmit)}>
+            <form onSubmit={handleSubmit(onSubmit)
+            }>
                 <input {...register("username", { required: true })} placeholder="Username" />
 
                 <input {...register("password", { required: true, minLength: 6 })} placeholder="Password" />

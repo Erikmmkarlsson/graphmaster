@@ -1,5 +1,6 @@
 import {login, useAuth, logout} from "../auth"
 import { useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function Login() {
     const [username, setUsername] = useState('')
@@ -59,6 +60,7 @@ export default function Login() {
                 <button onClick={onSubmitClick} type="submit">
                     Login Now
                 </button>
+                <button><Link to ="/register">Register</Link></button>
             </form>
                 : <button onClick={() => logout()}>Logout</button>}
         </div>
