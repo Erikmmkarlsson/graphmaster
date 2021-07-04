@@ -196,7 +196,7 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
-    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'), confirmation_uri='http://localhost:5000/finalize' )
+    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'), confirmation_uri='http://localhost:3000/finalize' )
     ret = {'message': 'successfully sent registration email to user {}'.format(
         new_user.username
     )}
