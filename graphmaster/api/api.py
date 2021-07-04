@@ -185,7 +185,7 @@ def register():
            "email":"brandt@biglebowski.com"
          }'
     """
-    req = flask.request.get_json(force=True)[0]
+    req = flask.request.get_json(force=True)
     username = req.get('username', None)
     email = req.get('email', None)
     password = req.get('password', None)
