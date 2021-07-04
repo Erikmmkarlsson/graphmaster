@@ -1,21 +1,15 @@
 import { useEffect, useState } from "react";
 import './App.scss';
 import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect,
-  Link
-} from "react-router-dom";
-import { useAuth, authFetch} from "./components/auth";
-import Login from "./components/login/Login";
+  BrowserRouter as Router, Switch, Route, Redirect, Link} from "react-router-dom";
+import {useAuth, authFetch} from "./components/auth";
+import {Login} from "./components/login/";
 import Home from "./components/home/Home";
 import Graphs from "./components/graphs/Graphs"
 
 export default function App() {
   return (
     <Router>
-      <div>
         <nav className= "nav">
         <Link to="/"><div className="button">
             Home</div></Link>
@@ -37,18 +31,20 @@ export default function App() {
             <Login/>
           </Route>
 
-          <PrivateRoute path="/secret" component={Secret} />
-
-          <Route path="/graphs">
-            <h1>Graphs</h1>
-            <Graphs/>
+          <Route path="/register">
+            register
+          </Route>
+          <Route path="/finalize">
+            finalize
           </Route>
 
+          <PrivateRoute path="/secret" component={Secret} />
+          <PrivateRoute path="/graphs" component={Graphs} />
+            
           <Route path="/">
             <Home/>
           </Route>
         </Switch>
-      </div>
     </Router>
   );
 }

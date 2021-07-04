@@ -207,10 +207,10 @@ def register():
 def finalize():
     """
     Finalizes a user registration with the token that they were issued in their
-    registration email
+    registration email.
 
     .. example::
-       $ curl http://localhost:5000/finalize -X GET \
+       $ curl http://localhost:5000/api/finalize -X GET \
          -H "Authorization: Bearer <your_token>"
     """
     registration_token = guard.read_token_from_header()
