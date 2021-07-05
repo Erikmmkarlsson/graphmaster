@@ -1,5 +1,3 @@
-import os
-
 import flask
 import flask_praetorian
 import flask_cors
@@ -10,10 +8,8 @@ from .model import User, db, influx_db
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
 app = flask.Flask(__name__)
-
 app.debug = True
 app.config.from_object("api.config")
-
 mail = Mail(app)
 
 # Initialize the flask-praetorian instance for the app
@@ -36,7 +32,6 @@ with app.app_context():
             roles='admin'
         ))
     db.session.commit()
-    
 
 
 # Set up routes
@@ -176,6 +171,8 @@ def finalize():
 # Error handling
 jsonify = flask.jsonify
 g = flask.g
+
+
 @app.errorhandler(400)
 @app.errorhandler(422)
 def bad_request(err):
