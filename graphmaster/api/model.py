@@ -1,8 +1,11 @@
 import flask_sqlalchemy
+from flask_influxdb import InfluxDB
+from influxdb import InfluxDBClient
 
 db = flask_sqlalchemy.SQLAlchemy()
+influx_db = InfluxDB()
 
-#   The User Model
+#   The user model
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.Text, unique=True)
@@ -31,3 +34,5 @@ class User(db.Model):
 
     def is_valid(self):
         return self.is_active
+
+

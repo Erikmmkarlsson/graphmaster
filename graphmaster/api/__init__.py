@@ -1,49 +1,25 @@
 import os
-import sys
 
 import flask
 import flask_praetorian
 import flask_cors
 from flask_mail import Mail, Message
 
-from .model import User, db
+from .model import User, db, influx_db
 
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
 app = flask.Flask(__name__)
 
-jsonify = flask.jsonify
-g = flask.g
-
 app.debug = True
-app.config['SECRET_KEY'] = os.urandom(24)
-app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
-app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config.from_object("api.config")
 
-# mail config. Set gmail username+password in seperate env-file .env
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 465
-app.config['MAIL_USERNAME'] = os.environ['GMAIL_USERNAME']
-app.config['MAIL_PASSWORD'] = os.environ['GMAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = (
-    'Graphmaster', app.config['MAIL_USERNAME'])
-app.config['MAIL_USE_TLS'] = False
-app.config['MAIL_USE_SSL'] = True
 mail = Mail(app)
-
-try:
-    os.environ["GMAIL_PASSWORD"]
-    os.environ["GMAIL_USERNAME"]
-except KeyError:
-    print("Please set the environment variable GMAIL_PASSWORD and USERNAME")
-    sys.exit(1)
 
 # Initialize the flask-praetorian instance for the app
 guard.init_app(app, User)
 
 # Initialize local database
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.getcwd(), 'database.db')}"
 db.init_app(app)
 
 # Initializes CORS so that the api_tool can talk to the app
@@ -60,9 +36,11 @@ with app.app_context():
             roles='admin'
         ))
     db.session.commit()
+    
 
 
 # Set up routes
+
 @app.route('/api/')
 def home():
     return {"Hello": "World"}, 200
@@ -196,6 +174,8 @@ def finalize():
 
 
 # Error handling
+jsonify = flask.jsonify
+g = flask.g
 @app.errorhandler(400)
 @app.errorhandler(422)
 def bad_request(err):
