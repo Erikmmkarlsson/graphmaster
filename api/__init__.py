@@ -55,14 +55,44 @@ def write_data():
             }
         }'
     """
-    influx.switch_database(flask_praetorian.current_user().username)
+    user=flask_praetorian.current_user().username
+    influx.switch_database(user)
     json_body = flask.request.get_json(force=True)
     written = influx.write_points(json_body)
     if written:
-        return "written data to influx", 200
+        return "written data to influx database " + user, 200
     else:
         return 400
 
+@app.route("/api/fetch/")
+@flask_praetorian.auth_required
+def fetch():
+    """
+    Fetches data from specific measurement, field and time interval,
+    returns time series as json object with columns and values for each row.
+    .. example::
+       $ curl http://localhost:5000/api/protected -X GET \
+         -H "Authorization: Bearer <your_token>" \
+             -d '
+             {
+                "measurement": "temperature", 
+                "field": "temperature",
+                "start": "2018-03-30T8:02:00Z",
+                "end": "now"
+             }'
+    measurement can be *. Fields is required. Start/end can be undefined.
+    """
+    user=flask_praetorian.current_user().username
+    influx.switch_database(user)
+
+    #JSON body parsing
+    req = flask.request.get_json(force=True)
+    measurement = req.get('measurement', None)
+    field = req.get('field', None)
+
+    query = influx.query(f'SELECT {measurement} FROM "{user}"."autogen"."{field}"').raw
+
+    return query, 200
 
 @app.route('/api/login', methods=['POST'])
 def login():
@@ -79,7 +109,6 @@ def login():
     password = req.get('password', None)
     user = guard.authenticate(username, password)
     ret = {'access_token': guard.encode_jwt_token(user)}
-    influx.switch_database(user.username)
     return ret, 200
 
 
@@ -175,7 +204,7 @@ def finalize():
     """
     registration_token = guard.read_token_from_header()
     user = guard.get_user_from_registration_token(registration_token)
-    # perform 'activation' of user here...like setting 'active' or something
+    # User is activated and gains a database
     user.is_active = True
     influx.create_database(user.username)
     db.session.commit()
