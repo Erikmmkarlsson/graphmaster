@@ -1,9 +1,9 @@
 import flask_sqlalchemy
-from flask_influxdb import InfluxDB
 from influxdb import InfluxDBClient
 
 db = flask_sqlalchemy.SQLAlchemy()
-influx_db = InfluxDB()
+
+influx = InfluxDBClient(host='localhost', port=8086)
 
 #   The user model
 class User(db.Model):

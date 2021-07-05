@@ -2,8 +2,7 @@ import flask
 import flask_praetorian
 import flask_cors
 from flask_mail import Mail, Message
-
-from .model import User, db, influx_db
+from .model import User, db, influx
 
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
@@ -35,10 +34,34 @@ with app.app_context():
 
 
 # Set up routes
+@app.route("/api/writedata", methods=['POST'])
+@flask_praetorian.auth_required
+def write_data():
+    """
+    inserts data from a json body into the user's database
 
-@app.route('/api/')
-def home():
-    return {"Hello": "World"}, 200
+    .. example::
+       $ curl http://localhost:5000/api/writedata -X POST \
+        -H "Authorization: Bearer <your_token>" \
+        -d '
+         {
+            "measurement": "brushEvents",
+            "tags": {
+                "brushId": "6c89f539-71c6-490d-a28d-6c5d84c0ee2f"
+            },
+            "time": "2018-03-28T8:01:00Z",
+            "fields": {
+                "duration": 127
+            }
+        }'
+    """
+    influx.switch_database(flask_praetorian.current_user().username)
+    json_body = flask.request.get_json(force=True)
+    written = influx.write_points(json_body)
+    if written:
+        return 200
+    else:
+        return 400
 
 
 @app.route("/api/mailme")
@@ -65,6 +88,7 @@ def login():
     password = req.get('password', None)
     user = guard.authenticate(username, password)
     ret = {'access_token': guard.encode_jwt_token(user)}
+    influx.switch_database(user.username)
     return ret, 200
 
 
@@ -162,6 +186,7 @@ def finalize():
     user = guard.get_user_from_registration_token(registration_token)
     # perform 'activation' of user here...like setting 'active' or something
     user.is_active = True
+    influx.create_database(user.username)
     db.session.commit()
 
     ret = {'access_token': guard.encode_jwt_token(user)}
@@ -171,7 +196,6 @@ def finalize():
 # Error handling
 jsonify = flask.jsonify
 g = flask.g
-
 
 @app.errorhandler(400)
 @app.errorhandler(422)
