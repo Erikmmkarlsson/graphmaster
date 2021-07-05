@@ -1,72 +1,43 @@
 import os
 import sys
+
 import flask
-import flask_sqlalchemy
 import flask_praetorian
 import flask_cors
 from flask_mail import Mail, Message
 
-db = flask_sqlalchemy.SQLAlchemy()
+from .model import User, db
+
 guard = flask_praetorian.Praetorian()
 cors = flask_cors.CORS()
-
-
-# A generic user model that might be used by an app powered by flask-praetorian
-class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.Text, unique=True)
-    password = db.Column(db.Text)
-    roles = db.Column(db.Text)
-    is_active = db.Column(db.Boolean, default=True, server_default='true')
-
-    @property
-    def rolenames(self):
-        try:
-            return self.roles.split(',')
-        except Exception:
-            return []
-    
-    @property
-    def identity(self):
-        return self.id
-
-    @classmethod
-    def lookup(cls, username):
-        return cls.query.filter_by(username=username).one_or_none()
-
-    @classmethod
-    def identify(cls, id):
-        return cls.query.get(id)
-
-    def is_valid(self):
-        return self.is_active
-
-
-# Initialize flask app for the example
 app = flask.Flask(__name__)
 
+jsonify = flask.jsonify
+g = flask.g
+
 app.debug = True
-app.config['SECRET_KEY'] = 'top secret'
+app.config['SECRET_KEY'] = os.urandom(24)
 app.config['JWT_ACCESS_LIFESPAN'] = {'hours': 24}
 app.config['JWT_REFRESH_LIFESPAN'] = {'days': 30}
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # mail config. Set gmail username+password in seperate env-file .env
-app.config['MAIL_SERVER']='smtp.gmail.com'
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USERNAME'] = os.environ['GMAIL_USERNAME']
 app.config['MAIL_PASSWORD'] = os.environ['GMAIL_PASSWORD']
-app.config['MAIL_DEFAULT_SENDER'] = ('Graphmaster', app.config['MAIL_USERNAME'])
+app.config['MAIL_DEFAULT_SENDER'] = (
+    'Graphmaster', app.config['MAIL_USERNAME'])
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-mail= Mail(app)
+mail = Mail(app)
 
-try:  
+try:
     os.environ["GMAIL_PASSWORD"]
     os.environ["GMAIL_USERNAME"]
-except KeyError: 
-   print("Please set the environment variable GMAIL_PASSWORD and USERNAME")
-   sys.exit(1)
+except KeyError:
+    print("Please set the environment variable GMAIL_PASSWORD and USERNAME")
+    sys.exit(1)
 
 # Initialize the flask-praetorian instance for the app
 guard.init_app(app, User)
@@ -100,7 +71,7 @@ def home():
 @app.route("/api/mailme")
 def index():
     msg = Message("Hello",
-                recipients=["erik.karlsson97@outlook.com"])
+                  recipients=["erik.karlsson97@outlook.com"])
     msg.body = "Hello Flask message sent from Flask-Mail"
     mail.send(msg)
     return "Sent"
@@ -116,7 +87,7 @@ def login():
          -d '{"username":"admin","password":"strongpassword"}'
     """
     req = flask.request.get_json(force=True)
-    
+
     username = req.get('username', None)
     password = req.get('password', None)
     user = guard.authenticate(username, password)
@@ -196,7 +167,8 @@ def register():
     )
     db.session.add(new_user)
     db.session.commit()
-    guard.send_registration_email(email, user=new_user, confirmation_sender= ('Graphmaster', 'bot@graphmaster.io'), confirmation_uri='http://localhost:3000/finalize' )
+    guard.send_registration_email(email, user=new_user, confirmation_sender=(
+        'Graphmaster', 'bot@graphmaster.io'), confirmation_uri='http://localhost:3000/finalize')
     ret = {'message': 'successfully sent registration email to user {}'.format(
         new_user.username
     )}
@@ -222,6 +194,57 @@ def finalize():
     ret = {'access_token': guard.encode_jwt_token(user)}
     return ret, 200
 
+
+# Error handling
+@app.errorhandler(400)
+@app.errorhandler(422)
+def bad_request(err):
+    try:
+        headers = err.data.get('headers', None)
+        messages = err.data.get('messages', [err.description])
+    except AttributeError:
+        headers = None
+        messages = [err.description]
+    body = jsonify(
+        error='BAD_REQUEST' if err.code == 400 else 'UNPROCESSABLE_ENTITY',
+        messages=messages
+    )
+    if headers:
+        return body, err.code, headers
+    else:
+        return body, err.code
+
+
+@app.errorhandler(403)
+def not_found(err):
+    return jsonify(error='FORBIDDEN', messages=[err.description]), 403
+
+
+@app.errorhandler(404)
+def not_found(err):
+    return jsonify(error='NOT_FOUND', messages=[err.description]), 404
+
+
+@app.errorhandler(405)
+def method_not_allowed(err):
+    return jsonify(error='METHOD_NOT_ALLOWED', messages=[err.description]), 405
+
+
+@app.errorhandler(500)
+def internal_server_error(err):
+    if g.sentry_event_id:
+        messages = [
+            ('An unknown error has occured. Please try again. '
+             'If the problem persists, please contact support with your error '
+             'event identifier at hand. Your error event identifier is ') +
+            g.sentry_event_id
+        ]
+    else:
+        messages = ['An unknown error has occured. Please try again.']
+    return jsonify(
+        error='INTERNAL_SERVER_ERROR',
+        messages=messages
+    ), 500
 
 
 # Run the api
