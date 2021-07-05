@@ -5,7 +5,7 @@ import sys
 #auth
 SECRET_KEY = os.environ['SECRET_KEY']
 JWT_ACCESS_LIFESPAN = {'hours': 24}
-JWT_REFRESH_LIFESPAN = {'minutes': 30}
+JWT_REFRESH_LIFESPAN = {'hours': 24}
 
 #db
 SQLALCHEMY_TRACK_MODIFICATIONS = False

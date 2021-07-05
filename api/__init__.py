@@ -30,7 +30,8 @@ with app.app_context():
             password=guard.hash_password('strongpassword'),
             roles='admin'
         ))
-    db.session.commit()
+        influx.create_database('Erik')
+        db.session.commit()
 
 
 # Set up routes
@@ -44,14 +45,13 @@ def write_data():
        $ curl http://localhost:5000/api/writedata -X POST \
         -H "Authorization: Bearer <your_token>" \
         -d '
-         {
-            "measurement": "brushEvents",
+        {        
+            "measurement": "temperature",
             "tags": {
-                "brushId": "6c89f539-71c6-490d-a28d-6c5d84c0ee2f"
+                "device": "Pycom"
             },
-            "time": "2018-03-28T8:01:00Z",
             "fields": {
-                "duration": 127
+                "temperature": 25
             }
         }'
     """
@@ -59,18 +59,9 @@ def write_data():
     json_body = flask.request.get_json(force=True)
     written = influx.write_points(json_body)
     if written:
-        return 200
+        return "written data to influx", 200
     else:
         return 400
-
-
-@app.route("/api/mailme")
-def index():
-    msg = Message("Hello",
-                  recipients=["erik.karlsson97@outlook.com"])
-    msg.body = "Hello Flask message sent from Flask-Mail"
-    mail.send(msg)
-    return "Sent"
 
 
 @app.route('/api/login', methods=['POST'])
@@ -196,6 +187,7 @@ def finalize():
 # Error handling
 jsonify = flask.jsonify
 g = flask.g
+
 
 @app.errorhandler(400)
 @app.errorhandler(422)
