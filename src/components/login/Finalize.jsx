@@ -22,7 +22,7 @@ async function send_token(url = '') {
     const token = queryParams.get('token');
 
     const requestOptions = {
-        method: 'GET',
+        method: 'POST',
         headers: { 'Authorization': 'Bearer ' + token }
     };
 

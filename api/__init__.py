@@ -60,18 +60,18 @@ def write_data():
     json_body = flask.request.get_json(force=True)
     written = influx.write_points(json_body)
     if written:
-        return "written data to influx database " + user, 200
+        return "written data to influx database " + user, 201
     else:
-        return 400
+        return written, 400
 
-@app.route("/api/fetch/")
+@app.route("/api/fetch", methods=['POST'])
 @flask_praetorian.auth_required
 def fetch():
     """
     Fetches data from specific measurement, field and time interval,
     returns time series as json object with columns and values for each row.
     .. example::
-       $ curl http://localhost:5000/api/protected -X GET \
+       $ curl http://localhost:5000/api/protected -X POST \
          -H "Authorization: Bearer <your_token>" \
              -d '
              {
@@ -116,7 +116,7 @@ def login():
 def refresh():
     """
     Refreshes an existing JWT by creating a new one that is a copy of the old
-    except that it has a refrehsed access expiration.
+    except that it has a refreshed access expiration.
     .. example::
        $ curl http://localhost:5000/api/refresh -X GET \
          -H "Authorization: Bearer <your_token>"
@@ -141,14 +141,14 @@ def protected():
     return {'message': f'protected endpoint (allowed user {flask_praetorian.current_user().username})'}
 
 
-@app.route('/api/disable_user', methods=['POST'])
+@app.route('/api/disable_user', methods=['PUT'])
 @flask_praetorian.auth_required
 @flask_praetorian.roles_required('admin')
 def disable_user():
     """
     Disables a user in the data store
     .. example::
-        $ curl http://localhost:5000/disable_user -X POST \
+        $ curl http://localhost:5000/disable_user -X PUT \
           -H "Authorization: Bearer <your_token>" \
           -d '{"username":"Walter"}'
     """
@@ -192,25 +192,27 @@ def register():
     return ret, 201
 
 
-@app.route('/api/finalize')
+@app.route('/api/finalize', methods = ['POST'])
 def finalize():
     """
     Finalizes a user registration with the token that they were issued in their
-    registration email.
+    registration email. This method activates the user and creates a database for the
+    user.
 
     .. example::
-       $ curl http://localhost:5000/api/finalize -X GET \
+       $ curl http://localhost:5000/api/finalize -X POST \
          -H "Authorization: Bearer <your_token>"
     """
     registration_token = guard.read_token_from_header()
     user = guard.get_user_from_registration_token(registration_token)
-    # User is activated and gains a database
+    
+    # User is activated and creates a database
     user.is_active = True
     influx.create_database(user.username)
     db.session.commit()
 
     ret = {'access_token': guard.encode_jwt_token(user)}
-    return ret, 200
+    return ret, 201
 
 
 # Error handling

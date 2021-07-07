@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form";
 export default function Register() {
 
     const { register, handleSubmit } = useForm();
+
     const onSubmit = (data) => {
         console.log(data)
         const requestOptions = {
@@ -10,9 +11,9 @@ export default function Register() {
             body: JSON.stringify(data)
         };
 
-        fetch('/api/register', requestOptions);
+        fetch('/api/register', requestOptions).then(response => response.json())
+        .then(data => console.log(data));
 
-        window.open("/login");
     }
 
     return (
@@ -20,7 +21,7 @@ export default function Register() {
 
             <form onSubmit={handleSubmit(onSubmit)
             }>
-                <input {...register("username", { required: true })} placeholder="Username" />
+                <input {...register("username", { required: true, unique: true })} placeholder="Username" />
 
                 <input {...register("password", { required: true, minLength: 6 })} placeholder="Password" />
 

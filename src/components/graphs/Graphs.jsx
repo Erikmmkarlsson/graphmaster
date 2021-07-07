@@ -1,18 +1,48 @@
 import { Component } from "react";
 import Chart from "react-apexcharts";
 import './Graphs.scss';
+import { authFetch } from "../auth";
 
 export default class Graphs extends Component {
   constructor(props) {
     super(props);
 
+    get_data("temperature", "temperature");
+/* Returns:
+{
+  "series": [
+    {
+      "columns": [
+        "time",
+        "temperature"
+      ],
+      "name": "temperature",
+      "values": [
+        [
+          "2021-07-05T19:28:25.316467Z",
+          24
+        ],
+        [
+          "2021-07-05T19:28:28.839730Z",
+          25
+        ],
+        [
+          "2021-07-05T19:28:32.032686Z",
+          27
+        ]
+      ]
+    }
+  ]
+}
+
+*/
     this.state = {
       options: {
         chart: {
           id: "basic-bar"
         },
         xaxis: {
-          categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998]
+          time: [1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998]
         }
       },
       series: [
@@ -48,4 +78,31 @@ export default class Graphs extends Component {
     );
   }
 }
+
+async function get_data(measurement, field){
+  
+  let opts = {
+    'measurement': measurement,
+    'field': field
+}
+  
+  const requestOptions = {
+    method: 'POST',
+    body: JSON.stringify(opts)
+  };
+
+  const data = await authFetch("api/fetch", requestOptions);
+
+  return data;
+}
+/*
+async function send_data(){
+  const requestOptions = {
+    method: 'GET'
+  };
+
+  const response = await fetch("/api/writedata", requestOptions);
+
+
+}*/
 
