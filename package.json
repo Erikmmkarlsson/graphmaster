@@ -19,7 +19,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "start-api": "sudo service docker start && cd api && sudo docker-compose up -d && env/bin/flask run --no-debugger",
+    "start-docker": "sudo service docker start",
+    "start-api": "cd api && sudo docker-compose up -d && venv/bin/flask run --no-debugger",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
