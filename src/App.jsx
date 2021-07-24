@@ -19,7 +19,7 @@ export default function App() {
           Login</div></Link>
 
         <Link to="/secret"><div className="button">
-          Secret</div></Link>
+          Settings</div></Link>
 
         <Link to="/graphs"><div className="button">
           Graphs</div></Link>
